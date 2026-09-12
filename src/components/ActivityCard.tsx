@@ -73,18 +73,19 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
           </span>
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0 relative z-10">
           {showDeleteButton && onDelete && (
             <button
               id={`delete-activity-${activity.id}`}
               type="button"
-              aria-label="Delete activity"
+              aria-label={`Delete ${activity.name}`}
               onClick={(e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 onDelete(activity.id, e);
               }}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-              title="Delete activity"
+              className="p-2 min-w-[36px] min-h-[36px] rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 active:bg-rose-100 flex items-center justify-center transition-all cursor-pointer"
+              title={`Delete ${activity.name}`}
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -96,9 +97,10 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
             aria-label={activity.isCompleted ? 'Mark as pending' : 'Mark as completed'}
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               onToggleComplete(activity.id, e);
             }}
-            className={`p-1.5 rounded-xl transition-all ${
+            className={`p-2 min-w-[36px] min-h-[36px] rounded-xl flex items-center justify-center transition-all cursor-pointer ${
               activity.isCompleted
                 ? 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100 ring-1 ring-emerald-200'
                 : 'text-slate-400 hover:text-emerald-600 hover:bg-slate-50'

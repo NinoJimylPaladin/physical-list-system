@@ -15,6 +15,7 @@ import {
 import { User, ActivityCategory } from '../types/Activity';
 import { activityService } from '../services/activityService';
 import { ALL_CATEGORIES, CATEGORY_CONFIG } from '../styles/theme';
+import ConfirmModal from '../components/ConfirmModal';
 
 interface ProfileScreenProps {
   user: User | null;
@@ -53,20 +54,25 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
     }
   };
 
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+
   const handleLogout = () => {
-    if (window.confirm('Are you sure you want to sign out?')) {
-      onLogout();
-    }
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
+    onLogout();
   };
 
   const handleReset = () => {
-    if (
-      window.confirm(
-        'Reset sample activities to original default state? This will refresh all demo logs.'
-      )
-    ) {
-      onResetData();
-    }
+    setShowResetModal(true);
+  };
+
+  const handleConfirmReset = () => {
+    setShowResetModal(false);
+    onResetData();
   };
 
   // User initials
@@ -244,12 +250,36 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           id="profile-logout-button"
           type="button"
           onClick={handleLogout}
-          className="w-full py-3 px-4 rounded-2xl border border-rose-200 bg-rose-50 hover:bg-rose-100 active:scale-[0.99] text-rose-700 font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-xs"
+          className="w-full py-3 px-4 rounded-2xl border border-rose-200 bg-rose-50 hover:bg-rose-100 active:scale-[0.99] text-rose-700 font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
           <span>Sign Out</span>
         </button>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        title="Sign Out?"
+        description="Are you sure you want to sign out of your account? Your local fitness logs will remain safely stored."
+        confirmText="Sign Out"
+        cancelText="Cancel"
+        isDestructive={true}
+        onConfirm={handleConfirmLogout}
+        onClose={() => setShowLogoutModal(false)}
+      />
+
+      {/* Reset Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showResetModal}
+        title="Reset Workout Data?"
+        description="Reset sample activities to original default state? This will refresh all demo workout logs."
+        confirmText="Reset Data"
+        cancelText="Cancel"
+        isDestructive={true}
+        onConfirm={handleConfirmReset}
+        onClose={() => setShowResetModal(false)}
+      />
     </div>
   );
 };

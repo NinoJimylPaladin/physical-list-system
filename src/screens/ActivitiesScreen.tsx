@@ -20,6 +20,7 @@ import { activityService } from '../services/activityService';
 import { ALL_CATEGORIES, ALL_DIFFICULTIES } from '../styles/theme';
 import ActivityCard from '../components/ActivityCard';
 import CategoryCard from '../components/CategoryCard';
+import ConfirmModal from '../components/ConfirmModal';
 
 interface ActivitiesScreenProps {
   initialCategoryFilter?: ActivityCategory;
@@ -41,6 +42,9 @@ export const ActivitiesScreen: React.FC<ActivitiesScreenProps> = ({
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | 'All'>('All');
   const [selectedStatus, setSelectedStatus] = useState<'All' | 'Completed' | 'Pending'>('All');
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [activityToDelete, setActivityToDelete] = useState<PhysicalActivity | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
 
   // Sync if prop changed
   useEffect(() => {
@@ -77,15 +81,28 @@ export const ActivitiesScreen: React.FC<ActivitiesScreenProps> = ({
     }
   };
 
-  const handleDeleteActivity = async (id: string, e: React.MouseEvent) => {
+  const handleDeleteActivity = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this activity?')) {
-      try {
-        await activityService.deleteActivity(id);
-        setActivities((prev) => prev.filter((act) => act.id !== id));
-      } catch (err) {
-        console.error('Failed to delete activity:', err);
-      }
+    const target = activities.find((act) => act.id === id);
+    if (target) {
+      setActivityToDelete(target);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!activityToDelete) return;
+    try {
+      setIsDeleting(true);
+      await activityService.deleteActivity(activityToDelete.id);
+      setActivities((prev) => prev.filter((act) => act.id !== activityToDelete.id));
+      const deletedName = activityToDelete.name;
+      setActivityToDelete(null);
+      setFeedbackToast(`"${deletedName}" deleted successfully`);
+      setTimeout(() => setFeedbackToast(null), 2500);
+    } catch (err) {
+      console.error('Failed to delete activity:', err);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -374,6 +391,35 @@ export const ActivitiesScreen: React.FC<ActivitiesScreenProps> = ({
           </div>
         )}
       </div>
+
+      {/* Action Toast Feedback */}
+      {feedbackToast && (
+        <div
+          id="activities-feedback-toast"
+          className="fixed top-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold shadow-lg flex items-center gap-2 animate-fade-in"
+        >
+          <span>{feedbackToast}</span>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!activityToDelete}
+        title="Delete Physical Activity?"
+        description={
+          activityToDelete
+            ? `Are you sure you want to delete "${activityToDelete.name}" (${activityToDelete.duration} mins)? This activity log will be permanently removed.`
+            : ''
+        }
+        confirmText="Delete Activity"
+        cancelText="Cancel"
+        isDestructive={true}
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onClose={() => {
+          if (!isDeleting) setActivityToDelete(null);
+        }}
+      />
     </div>
   );
 };

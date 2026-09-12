@@ -22,6 +22,7 @@ import {
 import { PhysicalActivity, ActivityCategory } from '../types/Activity';
 import { activityService } from '../services/activityService';
 import { CATEGORY_CONFIG, DIFFICULTY_CONFIG } from '../styles/theme';
+import ConfirmModal from '../components/ConfirmModal';
 
 interface ActivityDetailsScreenProps {
   activityId: string;
@@ -81,6 +82,7 @@ export const ActivityDetailsScreen: React.FC<ActivityDetailsScreenProps> = ({
   const [activity, setActivity] = useState<PhysicalActivity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [copiedNotification, setCopiedNotification] = useState(false);
 
   const loadActivity = async () => {
@@ -109,17 +111,20 @@ export const ActivityDetailsScreen: React.FC<ActivityDetailsScreenProps> = ({
     }
   };
 
-  const handleDelete = async () => {
+  const handleOpenDeleteModal = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
     if (!activity) return;
-    if (window.confirm(`Permanently delete "${activity.name}"?`)) {
-      setIsDeleting(true);
-      try {
-        await activityService.deleteActivity(activity.id);
-        onActivityDeleted();
-      } catch (err) {
-        console.error('Failed to delete activity:', err);
-        setIsDeleting(false);
-      }
+    setIsDeleting(true);
+    try {
+      await activityService.deleteActivity(activity.id);
+      setShowDeleteModal(false);
+      onActivityDeleted();
+    } catch (err) {
+      console.error('Failed to delete activity:', err);
+      setIsDeleting(false);
     }
   };
 
@@ -218,9 +223,10 @@ export const ActivityDetailsScreen: React.FC<ActivityDetailsScreenProps> = ({
             id="delete-activity-detail-button"
             type="button"
             disabled={isDeleting}
-            onClick={handleDelete}
-            className="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+            onClick={handleOpenDeleteModal}
+            className="p-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 active:bg-rose-100 transition-colors cursor-pointer"
             title="Delete activity"
+            aria-label="Delete activity"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -383,14 +389,34 @@ export const ActivityDetailsScreen: React.FC<ActivityDetailsScreenProps> = ({
           <button
             id="details-delete-bottom-button"
             type="button"
-            onClick={handleDelete}
-            className="py-3 px-4 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+            disabled={isDeleting}
+            onClick={handleOpenDeleteModal}
+            className="py-3 px-4 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-700 font-bold text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
             <Trash2 className="w-4 h-4" />
             <span>Delete</span>
           </button>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        title="Delete Physical Activity?"
+        description={
+          activity
+            ? `Are you sure you want to delete "${activity.name}" (${activity.duration} mins)? This activity will be permanently removed from your workout history.`
+            : ''
+        }
+        confirmText="Delete Activity"
+        cancelText="Cancel"
+        isDestructive={true}
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onClose={() => {
+          if (!isDeleting) setShowDeleteModal(false);
+        }}
+      />
     </div>
   );
 };
