@@ -1,0 +1,6 @@
+{
+  "name": "Physical Activity List",
+  "description": "A modern mobile fitness application to view, search, categorize, track, and manage physical activities with progress analytics and offline storage.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
